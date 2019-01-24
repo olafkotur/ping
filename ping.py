@@ -57,7 +57,8 @@ def sendOnePing(icmpSocket, destinationAddress, ID):
 	# 3. Insert checksum into packet
 	# 4. Send packet using socket
 	# 5. Record time of sending
-	pass # Remove/replace when function is complete
+	pass
+
 	
 def doOnePing(destinationAddress, timeout): 
 	# 1. Create ICMP socket
@@ -65,15 +66,61 @@ def doOnePing(destinationAddress, timeout):
 	# 3. Call receiveOnePing function
 	# 4. Close ICMP socket
 	# 5. Return total network delay
-	pass # Remove/replace when function is complete
+	pass
 	
-def ping(host, timeout=1):
+def ping(host, count=10, timeout=0.1):
 	# 1. Look up hostname, resolving it to an IP address
 	# 2. Call doOnePing function, approximately every second
 	# 3. Print out the returned delay
-	# 4. Continue this process until stopped	
-	pass # Remove/replace when function is complete  
-	
+	# 4. Continue this process until stopped
+	hostAddress = socket.gethostbyname(host)
+	i = 1
+	while i < count:
+		doOnePing(hostAddress, timeout)
+		time.sleep(timeout)
+		i+= 1
+		print hostAddress
+
+
+
+# ------------- Execution -------------
+# userInput = raw_input()
+# arguments = len(userInput.split())
+
+# if arguments == 2:
+# 	if "ping" in userInput:
+# 		operation, host = userInput.split()
+# 		ping(host)
+
+# elif arguments == 4:
+# 	if "-c" in userInput:
+# 		operation, host, option, count = userInput.split()
+# 		ping(host, count)
+
+# else:
+# 	print "Invalid Operation"
 
 ping("lancaster.ac.uk")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
