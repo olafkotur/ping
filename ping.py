@@ -57,7 +57,7 @@ def sendOnePing(icmpSocket, destinationAddress, ID):
 	# 3. Insert checksum into packet
 	# 4. Send packet using socket
 	# 5. Record time of sending
-	pass
+	struct.pack('@hh')
 
 	
 def doOnePing(destinationAddress, timeout): 
@@ -78,29 +78,29 @@ def ping(host, count=10, timeout=0.1):
 	while i < count:
 		doOnePing(hostAddress, timeout)
 		time.sleep(timeout)
-		i+= 1
 		print hostAddress
 
 
 
-# ------------- Execution -------------
-# userInput = raw_input()
-# arguments = len(userInput.split())
+# User input
+userInput = raw_input()
+arguments = len(userInput.split())
 
-# if arguments == 2:
-# 	if "ping" in userInput:
-# 		operation, host = userInput.split()
-# 		ping(host)
+# Ping host fixed number of times
+if arguments == 2:
+	if "ping" in userInput:
+		operation, host = userInput.split()
+		ping(host)
 
-# elif arguments == 4:
-# 	if "-c" in userInput:
-# 		operation, host, option, count = userInput.split()
-# 		ping(host, count)
+# Ping host specified number of times
+elif arguments == 4:
+	if "-c" in userInput:
+		operation, host, option, count = userInput.split()
+		ping(host, count)
 
-# else:
-# 	print "Invalid Operation"
-
-ping("lancaster.ac.uk")
+# Operation not recognised
+else:
+	print "Invalid Operation"
 
 
 
