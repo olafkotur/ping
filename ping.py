@@ -45,25 +45,40 @@ def checksum(string):
 
 	
 def receiveOnePing(icmpSocket, destinationAddress, ID, timeout):
-	# 1. Wait for the socket to receive a reply
-	# 2. Once received, record time of receipt, otherwise, handle a timeout
-	# 3. Compare the time of receipt to time of sending, producing the total network delay
-	# 4. Unpack the packet header for useful information, including the ID
-	# 5. Check that the ID matches between the request and reply
-	# 6. Return total network delay
-	return 1
+	# Wait for receipt and record time
+	networkDelay = 0
+	while True:
+		packetReceived = select.select([icmpSocket], [], [], timeout) # Only need to read
+		
+		# Handle timeout
+		if (packetReceived[0] == []):
+			print 'TIMEOUT'
+		else:
+			# Record time
+			receiptTime = time.time()
+
+			# Unpack packet header for useful information
+			packet = icmpSocket.recv(64)
+			header = packet[20:28]
+			typ, code, checksum, identifier, seq = struct.unpack('bbHHh', header)
+
+			# Check that the ID matches between the request and reply
+			if (ID == identifier):
+				return receiptTime
+			else:
+				print 'ID match failed'
 
 
 	
-def sendOnePing(icmpSocket, destinationAddress, ID):
+def sendOnePing(icmpSocket, destinationAddress, ID, sequence):
 	# Build ICMP header
-	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, 0, ID, 1)
+	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, 0, ID, sequence)
 
 	# Checksum ICMP packet using given function
 	checksumValue = checksum(header)
 	
 	# Insert checksum into packet
-	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, checksumValue, ID, 1)
+	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, checksumValue, ID, sequence)
 
 	# Send packet using socket
 	icmpSocket.sendto(header, (destinationAddress, 80))
@@ -74,13 +89,13 @@ def sendOnePing(icmpSocket, destinationAddress, ID):
 
 	
 
-def doOnePing(destinationAddress, timeout): 
+def doOnePing(destinationAddress, timeout, sequence): 
 	# Create ICMP socket
 	icmpSocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname('icmp'))
 
 	# Call sendOnePing function
 	ID = os.getpid()
-	timeSent = sendOnePing(icmpSocket, destinationAddress, ID)
+	timeSent = sendOnePing(icmpSocket, destinationAddress, ID, sequence)
 
 	# Call receiveOnePing function
 	timeReceived = receiveOnePing(icmpSocket, destinationAddress, ID, timeout)
@@ -93,44 +108,48 @@ def doOnePing(destinationAddress, timeout):
 
 	
 
-def ping(host, count=10, timeout=0.1):
-	# 1. Look up hostname, resolving it to an IP address
-	# 2. Call doOnePing function, approximately every second
-	# 3. Print out the returned delay
-	# 4. Continue this process until stopped
+def ping(host, count=10, timeout=1):
+	# Look up hostname, resolving it to an IP address
 	hostAddress = socket.gethostbyname(host)
-	count = int(count);
 	
+
+	# Send one ping every 1000 ms
+	count = int(count);
 	counter = 1
-	while counter <= count:
-		counter += 1
-		delay = doOnePing(hostAddress, timeout)
-		print delay
+	while counter <= count:		
+		# Print delay
+		networkDelay = doOnePing(hostAddress, timeout, counter)
+		formattedDelay = '%.3f' % (networkDelay * 1000) + ' ms'
+		print '64 bytes from ' + str(hostAddress) + ': icmp_seq=' + str(counter) + ' time=' + str(formattedDelay)
+
+		# Delay for timeout ms
 		time.sleep(timeout)
+		counter += 1
 
 
-# User input
-# userInput = raw_input()
-# arguments = len(userInput.split())
 
-# # Ping host fixed number of times
-# if arguments == 2:
-# 	if "ping" in userInput:
-# 		operation, host = userInput.split()
-# 		ping(host)
+def userInput():
+	userInput = raw_input()
+	arguments = len(userInput.split())
 
-# # Ping host specified number of times
-# elif arguments == 4:
-# 	if "-c" in userInput:
-# 		operation, host, option, count = userInput.split()
-# 		ping(host, count)
+	# Ping host fixed number of times
+	if arguments == 2:
+		if "ping" in userInput:
+			operation, host = userInput.split()
+			ping(host)
 
-# # Operation not recognised
-# else:
-# 	print "Invalid Operation"
+	# Ping host specified number of times
+	elif arguments == 4:
+		if "-c" in userInput:
+			operation, host, option, count = userInput.split()
+			ping(host, count)
+
+	# Operation not recognised
+	else:
+		print "Invalid Operation"
 
 
-ping('lancaster.ac.uk')
+userInput()
 
 
 
