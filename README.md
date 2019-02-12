@@ -3,7 +3,7 @@
 `python ping.py`
 
 ## Basic Usage
-Pings a given host a fixed number of times (10) every 10000 milliseconds.
+Pings a given host a fixed number of times (10) every 1000 milliseconds.
 ```
 ping google.co.uk
 ```
