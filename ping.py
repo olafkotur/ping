@@ -45,7 +45,6 @@ def checksum(string):
 
 	
 def receiveOnePing(icmpSocket, destinationAddress, ID, timeout):
-
 	# Wait for receipt and record time
 	networkDelay = 0
 	while True:
