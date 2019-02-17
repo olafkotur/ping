@@ -12,6 +12,7 @@ import binascii
 
 ICMP_ECHO_REQUEST = 8 #ICMP type code for echo request messages
 ICMP_ECHO_REPLY = 0 #ICMP type code for echo reply messages
+BYTES = 64 # Number of bytes user is requesting
 
 
 def checksum(string): 
@@ -58,7 +59,7 @@ def receiveOnePing(icmpSocket, destinationAddress, ID, timeout):
 			receiptTime = time.time()
 
 			# Unpack packet header for useful information
-			packet = icmpSocket.recv(64)
+			packet = icmpSocket.recv(BYTES)
 			header = packet[20:28]
 			typ, code, checksum, identifier, seq = struct.unpack('bbHHh', header)
 
@@ -73,15 +74,16 @@ def receiveOnePing(icmpSocket, destinationAddress, ID, timeout):
 def sendOnePing(icmpSocket, destinationAddress, ID, sequence):
 	# Build ICMP header
 	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, 0, ID, sequence)
+	data = struct.pack('c', 'c')
 
 	# Checksum ICMP packet using given function
-	checksumValue = checksum(header)
+	checksumValue = checksum(header + data)
 	
 	# Insert checksum into packet
 	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, checksumValue, ID, sequence)
 
-	# Send packet using socket
-	icmpSocket.sendto(header, (destinationAddress, 80))
+	# Send packet using sock et
+	icmpSocket.sendto(header + data, (destinationAddress, 80))
 
 	# Record time of sending
 	timeSent = time.time()
@@ -120,7 +122,7 @@ def ping(host, count=10, timeout=1):
 		# Print delay
 		networkDelay = doOnePing(hostAddress, timeout, counter)
 		formattedDelay = '%.3f' % (networkDelay * 1000) + ' ms'
-		print '64 bytes from ' + str(hostAddress) + ': icmp_seq=' + str(counter) + ' time=' + str(formattedDelay)
+		print str(BYTES) + ' bytes from ' + str(hostAddress) + ': icmp_seq=' + str(counter) + ' time=' + str(formattedDelay)
 
 		# Delay for timeout ms
 		time.sleep(timeout)
@@ -149,23 +151,5 @@ def userInput():
 		print "Invalid Operation"
 
 
-userInput()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# userInput()
+ping('lancaster.ac.uk')
