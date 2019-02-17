@@ -11,6 +11,27 @@ import binascii
 
 ICMP_ECHO_REQUEST = 8
 MAX_HOPS = 64
+TRIES = 3
+BYTES = 52
+
+# Takes user input and passes it to the traceroute function
+def userInput():
+    userInput = raw_input()
+    arguments = len(userInput.split())
+
+    # Trace host using default values
+    if arguments == 2:
+        if "traceroute" in userInput:
+            operation, host = userInput.split()
+            traceroute(host)
+    
+    # Trace host using custom timeout
+    elif arguments == 4:
+        if "-t" in userInput:
+            operation, host, option, timeout = userInput.split()
+            traceroute(host, int(timeout))
+    else: print "Invalid Operation"
+
 
 def checksum(string): 
 	csum = 0
@@ -40,36 +61,54 @@ def checksum(string):
 
 	return answer
 
+
 # Traces the route of a host
-def traceroute(host):
-    destinationAddress = socket.gethostbyname(host)
-    for ttl in range(1, MAX_HOPS):
-        # Create socket
-        icmpSocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname('icmp'))
-        icmpSocket.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
+def traceroute(host, timeout=0):
+    # Get address info
+    hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(host)
+    print 'traceroute to ' + hostname + ' (' + str(ipaddrlist[0]) + '), ' + str(MAX_HOPS) + ' hops max, ' + str(BYTES) + ' byte packets'
 
-        # Build packet
-        ID = os.getpid()
-        header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, 0, ID, 1)
-        data = struct.pack('c', '*')
-        checksumValue = checksum(header + data)
-        header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, checksumValue, ID, 1)
+    # Loop until request type is 0 or the number of max hop is exceeded
+    for ttl in range(1, MAX_HOPS + 1):
+        # Loop until packet recevied or the number of tries exceeded
+        for attempt in range(TRIES):
+            # Create socket
+            icmpSocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname('icmp'))
+            icmpSocket.setsockopt(socket.SOL_IP, socket.IP_TTL, struct.pack('I', ttl))
 
-        icmpSocket.sendto(header + data, (destinationAddress, 80))
+            # Build packet with data
+            ID = os.getpid()
+            header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, 0, ID, 1)
+            data = struct.pack('c', '*')
+            checksumValue = checksum(header + data)
+            header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, checksumValue, ID, 1)
+        
+            # Send packet and note time
+            icmpSocket.sendto(header + data, (ipaddrlist[0], timeout))
+            timeSent = time.time()
+            
+            # Attempt to receive packet    
+            packetReceived = select.select([icmpSocket], [], [], 1) # Only need to read
+            if packetReceived[0] == []: print '*'
+            else:
+                packet, address = icmpSocket.recvfrom(BYTES)
+                timeReceived = time.time()
+                recv_header = packet[20:28]
+                break
+
+        # Extract info from header
+        request, code, checksum_val, identifier, seq = struct.unpack('bbHHh', recv_header)
+        
+        # Print hop information
+        nextHost = socket.getnameinfo(address, 0)[0]
+        formattedDelay = '%.3f' % ((timeReceived - timeSent) * 1000) + ' ms'
+        print ttl, nextHost, '(' + address[0] + ')', formattedDelay
+
+        # Sleep for timeout time
+        time.sleep(timeout)
+
+        # Determine whether program will loop or exit
+        if request == 0: break
 
 
-
-
-# Takes user input and passes it to the traceroute function
-def userInput():
-    userInput = raw_input()
-    arguments = len(userInput.split())
-
-    # Trace host using default values
-    if arguments == 2:
-        if "traceroute" in userInput:
-            operation, host = userInput.split()
-            # traceroute(host)
-            print(host)
-
-traceroute('lancaster.ac.uk')
+userInput()

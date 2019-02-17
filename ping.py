@@ -82,7 +82,7 @@ def sendOnePing(icmpSocket, destinationAddress, ID, sequence):
 	# Insert checksum into packet
 	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, checksumValue, ID, sequence)
 
-	# Send packet using socket
+	# Send packet using sock et
 	icmpSocket.sendto(header + data, (destinationAddress, 80))
 
 	# Record time of sending
