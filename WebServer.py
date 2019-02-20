@@ -35,8 +35,16 @@ def startServer(serverAddress, serverPort):
 	# Create server socket
 	tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-	# Bind the server socket to server address and server port
-	tcpSocket.bind((serverAddress, serverPort))
+	# Bind the server socket to server address and server port, increment until successful
+	portBound = False
+	while not portBound:
+		try: 
+			tcpSocket.bind((serverAddress, serverPort))
+			portBound = True
+		except:
+			print 'PORT ' + str(serverPort - 1) + ' is already in use\nAttempting PORT ' + str(serverPort)
+			serverPort += 1
+
 
 	# Listen for connections to server socket
 	tcpSocket.listen(MAX_CONNECTIONS)
@@ -60,13 +68,13 @@ def startServer(serverAddress, serverPort):
 			if (status == 200):
 				print 'Request Satisfied\n'
 			elif (status == 404):
-				print 'This is not the file you are looking for\n'
-			elif (status == 9999): break
+				print 'This is not the file you are looking for'
+			elif (status == 9999): serverActive = False
 	
 	# Useful info
 	tcpSocket.close()
 	ranFor = time.time() - startedTime
-	print 'Server ran for: ' + '%.3f' % ranFor + ' seconds.'
+	print '\nServer ran for: ' + '%.3f' % ranFor + ' seconds.'
 
 
 # Takes user input, if user skips then port set to random
