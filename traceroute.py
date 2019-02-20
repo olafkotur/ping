@@ -110,5 +110,8 @@ def traceroute(host, timeout=0):
         # Determine whether program will loop or exit
         if request == 0: break
 
+def main():
+    userInput()
 
-userInput()
+if __name__ == "__main__":
+    main()

@@ -151,5 +151,8 @@ def userInput():
 		print "Invalid Operation"
 
 
-# userInput()
-ping('lancaster.ac.uk')
+def main():
+	userInput()
+
+if __name__ == "__main__":
+	main()

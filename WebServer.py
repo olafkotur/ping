@@ -3,11 +3,12 @@
 
 import socket
 import random
+import time
 import sys
 
 SERVER_ADDRESS = '127.0.0.1'
 MAX_CONNECTIONS = 2
-FIXED_PORT = True
+FIXED_PORT = False
 
 
 def handleRequest(tcpSocket):
@@ -29,26 +30,27 @@ def startServer(serverAddress, serverPort):
 
 	# 3. Continuously listen for connections to server socket
 	tcpSocket.listen(MAX_CONNECTIONS)
+	started = time.time()
 	print 'Listening on ' + str(serverAddress) + ' | PORT: ' + str(serverPort) + '\n'
 
 	while True:
-		connection = tcpSocket.accept()
+		connection, extra = tcpSocket.accept()
+		# Handle request if connection is accepted
 		if (connection):
 			print 'Connected - HANDLING REQUEST\n'
+			print connection
+			print extra
 			status = handleRequest(tcpSocket)
+			
+			# Close server if request is satisfied
 			if (status == 200):
 				print 'Request Satisfied - CLOSING SERVER\n'
 				tcpSocket.close()
 				break
-
-
-	# 4. When a connection is accepted, call handleRequest function, passing new connection socket (see https://docs.python.org/2/library/socket.html#socket.socket.accept)
-
-
-	# 5. Close server socket
-
-
-	print 'Done'
+	
+	# Useful info
+	ranFor = time.time() - started
+	print 'Server ran for: ' + '%.3f' % ranFor + ' seconds.'
 
 
 # Takes user input, if user skips then port set to random
