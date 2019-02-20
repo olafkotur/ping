@@ -46,6 +46,7 @@ def startServer(serverAddress, serverPort):
 	while not portBound:
 		try: 
 			tcpSocket.bind((serverAddress, serverPort))
+			tcpSocket.settimeout(60)
 			portBound = True
 		except:
 			serverPort += 1
@@ -79,7 +80,6 @@ def handleRequest(tcpSocket):
 	data = tcpSocket.recv(1024).decode()
 	
 	# Extract useful infromation for the HTTP header
-	print data
 	data = data.split(' ')
 	method, request = data[0], data[1]
 
@@ -92,15 +92,17 @@ def handleRequest(tcpSocket):
 		try: 
 			# Grab the file
 			file = open(request[1:], 'r')
-			requestedData = file.read()
+			requestedData = file.read().encode()
 			file.close()
 			
 			# Pack the file into the header
 			header = createHeader(' ' + str(200) + ' OK')
-			requestedData = header + requestedData.encode()
+			requestedData = header + str(requestedData)
+			print requestedData
 			tcpSocket.send(requestedData)
 			status = 200
-		except:
+		except Exception as error:
+			print error
 			status = 404
 
 
@@ -118,9 +120,7 @@ def createHeader(code):
 	formattedTime = time.strftime('%a, %d %b %Y %H:%M:%S', time.localtime())
 	header = 'HTTP/1.1 ' + code + '\n'
 	header += 'Date: ' + formattedTime + '\n'
-	header += 'Server: WebServer Example\n'
-	print header
-	print header.encode()
+	header += 'Server: WebServer Example\n\n'
 	return header.encode()
 
 
