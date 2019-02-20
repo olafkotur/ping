@@ -3,7 +3,7 @@
 ## Ping
 Terminal: ```sudo python ping.py```
 
-### Usage
+#### Usage
 Ping 10 times (fixed) to host: `google.com`
 ```ping google.com```
 
@@ -15,7 +15,7 @@ Ping 25 times (custom) to host: `google.com`
 ## Traceroute
 Terminal: ```sudo python traceroute.py```
 
-### Usage
+#### Usage
 Trace route of host: `google.com`
 ```ping google.com```
 
