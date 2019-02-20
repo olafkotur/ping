@@ -2,54 +2,70 @@
 # -*- coding: UTF-8 -*-
 
 import socket
+import sys
 import random
 import time
-import sys
 
 SERVER_ADDRESS = '127.0.0.1'
-MAX_CONNECTIONS = 2
-FIXED_PORT = False
+MAX_CONNECTIONS = 4
+FIXED_PORT = True
 
 
 def handleRequest(tcpSocket):
-	# 1. Receive request message from the client on connection socket
-	# 2. Extract the path of the requested object from the message (second part of the HTTP header)
+	# Receive request message from the client on connection socket
+	data = tcpSocket.recv(1024).decode()
+	
+	# Extract useful infromation for the HTTP header
+	data = data.split(' ')
+	request = data[1]
+	print 'Client requested file ' + str(request) + ' from disk'
+
+	# TESTING ONLY - shutdown server if request is close
+	status = 200
+	if (request == '/close'): status = 9999
+
 	# 3. Read the corresponding file from disk
 	# 4. Store in temporary buffer
 	# 5. Send the correct HTTP response error
 	# 6. Send the content of the file to the socket
 	# 7. Close the connection socket 
-	return 200
+	return status
 
 def startServer(serverAddress, serverPort):
-	# 1. Create server socket
+	# Create server socket
 	tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-	# 2. Bind the server socket to server address and server port
+	# Bind the server socket to server address and server port
 	tcpSocket.bind((serverAddress, serverPort))
 
-	# 3. Continuously listen for connections to server socket
+	# Listen for connections to server socket
 	tcpSocket.listen(MAX_CONNECTIONS)
-	started = time.time()
 	print 'Listening on ' + str(serverAddress) + ' | PORT: ' + str(serverPort) + '\n'
+	startedTime = time.time()
 
-	while True:
-		connection, extra = tcpSocket.accept()
+	# Keep server running
+	serverActive = True
+	while serverActive:
+		# Accept new connections
+		connectionSocket, address = tcpSocket.accept()
+
 		# Handle request if connection is accepted
-		if (connection):
-			print 'Connected - HANDLING REQUEST\n'
-			print connection
-			print extra
-			status = handleRequest(tcpSocket)
+		if (connectionSocket):
+			print 'Received a connection at: ' + str(address[0]) + ' | ' + str(address[1]) + '\n'
+			
+			# Return status code from request
+			status = handleRequest(connectionSocket)
 			
 			# Close server if request is satisfied
 			if (status == 200):
-				print 'Request Satisfied - CLOSING SERVER\n'
-				tcpSocket.close()
-				break
+				print 'Request Satisfied\n'
+			elif (status == 404):
+				print 'This is not the file you are looking for\n'
+			elif (status == 9999): break
 	
 	# Useful info
-	ranFor = time.time() - started
+	tcpSocket.close()
+	ranFor = time.time() - startedTime
 	print 'Server ran for: ' + '%.3f' % ranFor + ' seconds.'
 
 
@@ -70,10 +86,9 @@ def userInput():
 			print 'Port number must be higher than 1024'
 			quit()
 	# Set port value if skipped
-	else: print '! SKIPPING: Setting PORT to ' + str(port) + '\n'
+	else: print '! SKIPPING: Setting PORT to ' + str(port)
 
 	return int(port)
-
 
 def main():
 	port = userInput()
