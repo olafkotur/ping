@@ -6,14 +6,15 @@ import sys
 import random
 import time
 
+MAX_CONNECTIONS = 4		# Max number of refused connections
+FIXED_PORT = True		# Always attempt to use PORT 8080 if available
 SERVER_ADDRESS = '127.0.0.1'
-MAX_CONNECTIONS = 4
-FIXED_PORT = True
 
 
 def main():
 	port = userInput()
 	startServer(SERVER_ADDRESS, port)
+
 
 # Takes user input, if user skips then port set to random
 def userInput():
@@ -37,16 +38,18 @@ def userInput():
 	return int(port)
 
 
+# Starts the server on a given port and address
 def startServer(serverAddress, serverPort):
 	# Create server socket
 	tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	tcpSocket.settimeout
 
 	# Bind the server socket to server address and server port, increment port until successful
 	portBound = False
 	while not portBound:
 		try: 
 			tcpSocket.bind((serverAddress, serverPort))
-			tcpSocket.settimeout(60)
+			tcpSocket.settimeout(100)
 			portBound = True
 		except:
 			serverPort += 1
@@ -75,11 +78,12 @@ def startServer(serverAddress, serverPort):
 	print '\nServer ran for: ' + '%.3f' % ranFor + ' seconds.'
 	sys.exit()
 
+
+# Handles the request that is made by the connecting client
 def handleRequest(tcpSocket):
 	# Receive request message from the client on connection socket
-	data = tcpSocket.recv(1024).decode()
-	
-	# Extract useful infromation for the HTTP header
+	tcpSocket.settimeout(100)
+	data = tcpSocket.recv(2048).decode()
 	data = data.split(' ')
 	method, request = data[0], data[1]
 
@@ -98,19 +102,12 @@ def handleRequest(tcpSocket):
 			# Pack the file into the header
 			header = createHeader(' ' + str(200) + ' OK')
 			requestedData = header + str(requestedData)
-			print requestedData
 			tcpSocket.send(requestedData)
+			tcpSocket.close()
 			status = 200
 		except Exception as error:
 			print error
 			status = 404
-
-
-	# 6. Send the content of the file to the sock8et
-	# 7. Close the connection socket
-
-	# TESTING ONLY - shutdown server if request is close
-	if (request == '/close'): status = 9999
 	
 	return status
 
