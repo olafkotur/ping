@@ -51,6 +51,5 @@ To exit the program and halt all server safely, use the default system interrupt
 
 Mac: 
 ```CMD + C```
-
 Literally anything else: 
 ```CTRL + C```
