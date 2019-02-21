@@ -3,9 +3,13 @@
 
 import socket
 import sys
-import random
-import time
-import signal
+
+# These following libraries do not help with the core function of the task
+# these were checked with the professor and were said to be ok for use
+import random # Used to generate random port number
+import time # Used to get current time for the HTTP header
+import signal # Used to detect CTRL-C 
+
 
 MAX_CONNECTIONS = 4		# Max number of refused connections
 FIXED_PORT = True		# Always attempt to use PORT 8080 if available
