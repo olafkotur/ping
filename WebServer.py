@@ -24,8 +24,7 @@ def main():
 # Takes user input, if user skips then port set to random
 def userInput():
 	print '>>> Enter the PORT number\n>>> Press ENTER to skip\n'
-	# userInput = raw_input()
-	userInput = None
+	userInput = raw_input()
 	
 	# Determine whether port is fixed or random 
 	if (FIXED_PORT): port = 8080
@@ -33,10 +32,12 @@ def userInput():
 
 	if (userInput):
 		# Only accept if port is higher than 1024
-		if (int(userInput) > 1024): port = userInput
+		if (int(userInput) > 1024): 
+			port = userInput
+			print 'Setting to: ' + str(port)
 		else: 
 			print 'Port number must be higher than 1024'
-			quit()
+			sys.exit()
 	# Set port value if skipped
 	else: print '! SKIPPING: Setting PORT to ' + str(port) + '\n'
 
@@ -109,7 +110,7 @@ def handleRequest(tcpSocket):
 				sendResponse(tcpSocket, (' ' + str(200) + ' Not Found'), requestedData)
 			else: 
 				sendResponse(tcpSocket, (' ' + str(200) + ' OK'), requestedData)
-				
+
 		except Exception as error:
 			print error4
 
