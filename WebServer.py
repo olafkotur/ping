@@ -93,7 +93,8 @@ def handleRequest(tcpSocket):
 	tcpSocket.settimeout(TIMEOUT)
 	data = tcpSocket.recv(2048).decode()
 	data = data.split(' ')
-	method, request = data[0], data[1]
+	try: method, request = data[0], data[1]
+	except Exception as error: handleRequest(tcpSocket)
 
 	# Safety net to make sure user is using GET method
 	if (method == 'GET'):	
