@@ -5,12 +5,15 @@ import socket
 import sys
 import random
 import time
+import signal
 
 MAX_CONNECTIONS = 4		# Max number of refused connections
 FIXED_PORT = True		# Always attempt to use PORT 8080 if available
 TIMEOUT = 100			# Socket blocking value
 SERVER_ADDRESS = '127.0.0.1'
 AVAILABLE_PAGES = ['/', '/index.html', '/doggo.html']
+tcpSocket = None
+startedTime = None
 
 
 def main():
@@ -43,6 +46,7 @@ def userInput():
 # Starts the server on a given port and address
 def startServer(serverAddress, serverPort):
 	# Create server socket
+	global tcpSocket
 	tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	tcpSocket.settimeout(TIMEOUT)
 
@@ -60,25 +64,22 @@ def startServer(serverAddress, serverPort):
 	# Listen for connections to server socket
 	tcpSocket.listen(MAX_CONNECTIONS)
 	print 'Listening on ' + str(serverAddress) + ' | PORT: ' + str(serverPort) + '\n'
+	global startedTime
 	startedTime = time.time()
 
-	# Accept new connections
-	connectionSocket, address = tcpSocket.accept()
+	# Keep server active
+	serverActive = True
+	while serverActive:
+		# Close server if SIGINT
+		signal.signal(signal.SIGINT, closeServer)
 
-	# Handle request if connection is accepted
-	if (connectionSocket):
-		print 'Received a connection at: ' + str(address[0]) + ' | ' + str(address[1])
-		
-		# Handle status code from client
-		status = handleRequest(connectionSocket)
-		if (status == 200): print '200 OK'
-		elif (status == 404): print '404 Not Found'
-	
-	# Useful info
-	tcpSocket.close()
-	ranFor = time.time() - startedTime
-	print '\nServer ran for: ' + '%.3f' % ranFor + ' seconds.'
-	sys.exit()
+		# Accept new connections
+		connectionSocket, address = tcpSocket.accept()
+
+		# Handle request if connection is accepted
+		if (connectionSocket):
+			print 'Received a connection at: ' + str(address[0]) + ' | ' + str(address[1])
+			handleRequest(connectionSocket)
 
 
 # Handles the request that is made by the connecting client
@@ -89,11 +90,10 @@ def handleRequest(tcpSocket):
 	data = data.split(' ')
 	method, request = data[0], data[1]
 
+	# Safety net to make sure user is using GET method
 	if (method == 'GET'):	
 		# Set default file to index.html
 		if (request == '/'): request = '/index.html'
-		print request
-		print AVAILABLE_PAGES
 		if (request not in AVAILABLE_PAGES): request = '/404.html'
 		print 'Client requested file ' + str(request) + ' from disk\n'
 		
@@ -105,20 +105,13 @@ def handleRequest(tcpSocket):
 			file.close()
 
 			# Pack the file into the header
-			print request
 			if (request == '/404.html'): 
 				sendResponse(tcpSocket, (' ' + str(200) + ' Not Found'), requestedData)
-				status = 404
 			else: 
 				sendResponse(tcpSocket, (' ' + str(200) + ' OK'), requestedData)
-				status = 200
-
-		# Set a deafult response if any errors occur
+				
 		except Exception as error:
-			print error
-			status = 404
-	
-	return status
+			print error4
 
 
 # Generates header according to the provided code
@@ -130,12 +123,21 @@ def createHeader(code):
 	return header.encode()
 
 
+# Constructs the data to be sent and sends it to client
 def sendResponse(tcpSocket, code, data):
 	header = createHeader(code)
 	data = header + str(data)
 	tcpSocket.send(data)
 	tcpSocket.close()
 
+
+# Gently closes the server and provides useful info
+def closeServer(signal, handler):
+	tcpSocket.close()
+	print 'Server Closed'
+	ranFor = time.time() - startedTime
+	print 'Server ran for: ' + '%.3f' % ranFor + ' seconds.'
+	sys.exit()
 
 # Execute main
 if __name__ == "__main__":
