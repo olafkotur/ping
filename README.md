@@ -1,4 +1,6 @@
 # Network Application Development
+***
+
 
 ## Ping - Usage
 ```sudo python ping.py```
@@ -9,7 +11,9 @@ Ping 10 times (fixed) to host: `google.com`
 Ping 25 times (custom) to host: `google.com`
 ```ping google.com -c 25```
 
+
 ***
+
 
 ## Traceroute - Usage
 ```sudo python traceroute.py```
