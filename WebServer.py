@@ -10,7 +10,7 @@ MAX_CONNECTIONS = 4		# Max number of refused connections
 FIXED_PORT = True		# Always attempt to use PORT 8080 if available
 TIMEOUT = 100			# Socket blocking value
 SERVER_ADDRESS = '127.0.0.1'
-AVAILABLE_PAGES = ['/', '/index.html']
+AVAILABLE_PAGES = ['/', '/index.html', '/doggo.html']
 
 
 def main():
