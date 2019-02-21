@@ -107,7 +107,7 @@ def handleRequest(tcpSocket):
 
 			# Pack the file into the header
 			if (request == '/404.html'): 
-				sendResponse(tcpSocket, (' ' + str(200) + ' Not Found'), requestedData)
+				sendResponse(tcpSocket, (' ' + str(404) + ' Not Found'), requestedData)
 			else: 
 				sendResponse(tcpSocket, (' ' + str(200) + ' OK'), requestedData)
 
