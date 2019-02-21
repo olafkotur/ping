@@ -8,7 +8,9 @@ import time
 
 MAX_CONNECTIONS = 4		# Max number of refused connections
 FIXED_PORT = True		# Always attempt to use PORT 8080 if available
+TIMEOUT = 100			# Socket blocking value
 SERVER_ADDRESS = '127.0.0.1'
+AVAILABLE_PAGES = ['/', '/index.html']
 
 
 def main():
@@ -42,7 +44,7 @@ def userInput():
 def startServer(serverAddress, serverPort):
 	# Create server socket
 	tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	tcpSocket.settimeout
+	tcpSocket.settimeout(TIMEOUT)
 
 	# Bind the server socket to server address and server port, increment port until successful
 	portBound = False
@@ -70,7 +72,7 @@ def startServer(serverAddress, serverPort):
 		# Handle status code from client
 		status = handleRequest(connectionSocket)
 		if (status == 200): print '200 OK'
-		elif (status == 404): print '404 Not Found\n'
+		elif (status == 404): print '404 Not Found'
 	
 	# Useful info
 	tcpSocket.close()
@@ -82,7 +84,7 @@ def startServer(serverAddress, serverPort):
 # Handles the request that is made by the connecting client
 def handleRequest(tcpSocket):
 	# Receive request message from the client on connection socket
-	tcpSocket.settimeout(100)
+	tcpSocket.settimeout(TIMEOUT)
 	data = tcpSocket.recv(2048).decode()
 	data = data.split(' ')
 	method, request = data[0], data[1]
@@ -90,6 +92,9 @@ def handleRequest(tcpSocket):
 	if (method == 'GET'):	
 		# Set default file to index.html
 		if (request == '/'): request = '/index.html'
+		print request
+		print AVAILABLE_PAGES
+		if (request not in AVAILABLE_PAGES): request = '/404.html'
 		print 'Client requested file ' + str(request) + ' from disk\n'
 		
 		# Read the corresponding file from disk
@@ -98,13 +103,17 @@ def handleRequest(tcpSocket):
 			file = open(request[1:], 'r')
 			requestedData = file.read().encode()
 			file.close()
-			
+
 			# Pack the file into the header
-			header = createHeader(' ' + str(200) + ' OK')
-			requestedData = header + str(requestedData)
-			tcpSocket.send(requestedData)
-			tcpSocket.close()
-			status = 200
+			print request
+			if (request == '/404.html'): 
+				sendResponse(tcpSocket, (' ' + str(200) + ' Not Found'), requestedData)
+				status = 404
+			else: 
+				sendResponse(tcpSocket, (' ' + str(200) + ' OK'), requestedData)
+				status = 200
+
+		# Set a deafult response if any errors occur
 		except Exception as error:
 			print error
 			status = 404
@@ -119,6 +128,13 @@ def createHeader(code):
 	header += 'Date: ' + formattedTime + '\n'
 	header += 'Server: WebServer Example\n\n'
 	return header.encode()
+
+
+def sendResponse(tcpSocket, code, data):
+	header = createHeader(code)
+	data = header + str(data)
+	tcpSocket.send(data)
+	tcpSocket.close()
 
 
 # Execute main
