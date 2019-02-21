@@ -50,4 +50,5 @@ If the client requests any other pages the server will respond with a 404 Not Fo
 To exit the program and halt all server safely, use the default system interrupt on your operating system, the program will detect this and handle the request accordingly.
 
 Mac: `CMD + C`
+
 Literally anything else: `CTRL + C`
