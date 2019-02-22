@@ -14,6 +14,7 @@ import signal # Used to detect CTRL-C
 MAX_CONNECTIONS = 4		# Max number of refused connections
 FIXED_PORT = True		# Always attempt to use PORT 8080 if available
 TIMEOUT = 100			# Socket blocking value
+RECEIVE_SIZE = 2048     # Max size for the recv method
 SERVER_ADDRESS = '127.0.0.1'
 AVAILABLE_PAGES = ['/', '/index.html', '/doggo.html']
 tcpSocket = None
@@ -60,7 +61,7 @@ def startServer(serverAddress, serverPort):
     while not portBound:
         try: 
             tcpSocket.bind((serverAddress, serverPort))
-            tcpSocket.settimeout(100)
+            tcpSocket.settimeout(TIMEOUT)
             portBound = True
         except:
             serverPort += 1
@@ -88,52 +89,51 @@ def startServer(serverAddress, serverPort):
 
 
 # Handles the request that is made by the connecting client
-def handleRequest(tcpSocket):
+def handleRequest(sock):
     # Receive request message from the client on connection socket
-    tcpSocket.settimeout(TIMEOUT)
-    data = tcpSocket.recv(2048).decode()
-    data = data.split(' ')
-    method, request = data[0], data[1]
-
-    # Safety net to make sure user is using GET method
-    if (method == 'GET'):	
-        # Set default file to index.html
-        if (request == '/'): request = '/index.html'
-        if (request not in AVAILABLE_PAGES): request = '/404.html'
-        print 'Client requested file ' + str(request) + ' from disk\n'
+    sock.settimeout(TIMEOUT)
+    data = sock.recv(RECEIVE_SIZE).decode()
+    
+    # Extract host name and request from the GET
+    if ('GET' in data):
+        host = data.split()[1]
+        if ('http://' in host): host = host.split('http://')[1]
+        if ('/' in host): host, request = host.split('/', 1)
+        else: request = ''
+        request = '/' + request
+        print '\nClient requesting ' + request + ' from ' + host
         
-        # Read the corresponding file from disk
+        # Get data using proxy and send to client
+        target = startProxy(data, host, request)
+        sock.send(target)
+        sock.close()
+        print 'Data has been sent to client, closing request'
+    else: sock.close()
+
+# Fetches data from target and passes it back to client
+def startProxy(data, host, request):
+    # Create new socket
+    proxySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    proxySocket.settimeout(TIMEOUT)
+
+    # Connect and send request to target
+    try:
+        proxySocket.connect((host, 80))
+        proxySocket.send(data)
+    except Exception as error:
+        print error
+
+    # Wait until data is received, return with the data
+    target = None
+    while True:
         try: 
-            # Grab the file
-            file = open(request[1:], 'r')
-            requestedData = file.read().encode()
-            file.close()
-
-            # Pack the file into the header
-            if (request == '/404.html'): 
-                sendResponse(tcpSocket, (' ' + str(404) + ' Not Found'), requestedData)
-            else: 
-                sendResponse(tcpSocket, (' ' + str(200) + ' OK'), requestedData)
-
-        except Exception as error:
-            print error4
-
-
-# Generates header according to the provided code
-def createHeader(code):
-    formattedTime = time.strftime('%a, %d %b %Y %H:%M:%S', time.localtime())
-    header = 'HTTP/1.1 ' + code + '\n'
-    header += 'Date: ' + formattedTime + '\n'
-    header += 'Server: WebServer Example\n\n'
-    return header.encode()
-
-
-# Constructs the data to be sent and sends it to client
-def sendResponse(tcpSocket, code, data):
-    header = createHeader(code)
-    data = header + str(data)
-    tcpSocket.send(data)
-    tcpSocket.close()
+            target  = proxySocket.recv(RECEIVE_SIZE)
+            if (target):
+                proxySocket.close()
+                break
+        except: break
+    
+    return target
 
 
 # Gently closes the server and provides useful info
@@ -144,6 +144,6 @@ def closeServer(signal, handler):
     print 'Server ran for: ' + '%.3f' % ranFor + ' seconds.'
     sys.exit()
 
-# Execute main
+
 if __name__ == "__main__":
     main()
