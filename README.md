@@ -71,6 +71,8 @@ For testing, you may choose to use a random PORT, to do this set the fixed port 
 
 To test the proxy you can use any browser provided you are able to set a manual proxy or the `wget` command. You should see terminal ouput for the related pages that are being requested. Note that this program will only work for `http://` websites, otherwise marked as `Not Secure` on some browsers.
 
+The proxy will attempt to hand cached pages to the client if they exist, otherwise the proxy will download the pages and then cache them for the next use.
+
 ```
 wget thebigcb.com -e use_proxy=yes -e http_proxy=127.0.0.1:8080
 ```
