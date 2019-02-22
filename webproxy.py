@@ -8,7 +8,8 @@ import sys
 # these were checked with the professor and were said to be ok for use
 import random # Used to generate random port number
 import time # Used to get current time for the HTTP header
-import signal # Used to detect CTRL-C 
+import signal # Used to detect CTRL-C
+import os # Used to create a file directory for caching
 
 
 MAX_CONNECTIONS = 4		# Max number of refused connections
@@ -17,6 +18,7 @@ TIMEOUT = 100			# Socket blocking value
 RECEIVE_SIZE = 2048     # Max size for the recv method
 SERVER_ADDRESS = '127.0.0.1'
 AVAILABLE_PAGES = ['/', '/index.html', '/doggo.html']
+EXTENSIONS = ['.htm', '.ic', '.gi', '.js', '.css']
 tcpSocket = None
 startedTime = None
 
@@ -103,12 +105,23 @@ def handleRequest(sock):
         request = '/' + request
         print '\nClient requesting ' + request + ' from ' + host
         
-        # Get data using proxy and send to client
-        target = startProxy(data, host, request)
+        # Check if request has already been cached locally
+        cached = getCached(host, request)
+        target = ''
+        if (cached == False):
+            print 'Cache not available, requesting new data'
+            target = startProxy(data, host, request)
+            handleCaching(host, request, target)
+        else:
+            print 'Cache is available, using data from disk'
+            target = cached
+        
+        # Sends data to client that satisfies request
         sock.send(target)
         sock.close()
         print 'Data has been sent to client, closing request'
     else: sock.close()
+
 
 # Fetches data from target and passes it back to client
 def startProxy(data, host, request):
@@ -134,6 +147,49 @@ def startProxy(data, host, request):
         except: break
     
     return target
+
+
+# Attempts to access cached webpage, returns false if it doesn't exist
+def getCached(folder, file):
+    # Define the file path
+    if (file == '/'): file = '/index.html'
+    if ('.' not in file): file += '.html'
+    path = 'cached/' + folder + file
+    
+    # Attempt to open the file
+    print 'Checking if page is cached at: ' + path
+    try:
+        file = open(path, 'r')
+        target = file.read()
+        file.close()
+        return target
+    except: return False
+
+
+# Caches provided web page to local storage
+def handleCaching(folder, file, data):
+    # Define the file path
+    if (file == '/'): file = '/index.html'
+    if (file[-1:] == '/'): file = file[:-1]
+    print file
+    if ('.' not in file): file += '.html'
+    print 'Caching ' + file + ' at: ' + './cached/' + folder + file
+
+    # Creates new directory for the website
+    directory = os.path.dirname('./cached/' + folder + '/')
+    try:
+        os.makedirs(directory)
+    except: pass
+    
+    # Attempts to write the data into the file
+    try:
+        print directory[2:] + file
+        f = open(directory[2:] + file, 'w+')
+        target = f.write(data)
+        f.close()
+        return target
+    except Exception as e:
+        print e
 
 
 # Gently closes the server and provides useful info
