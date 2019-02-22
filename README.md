@@ -36,8 +36,8 @@ The program will allow you to choose a `PORT number`, this must be greater than 
 For testing, you may choose to use a random PORT, to do this set the fixed port value to false in `webserver.py line 15`
 ```
 14  MAX_CONNECTIONS = 4		# Max number of refused connections
-15  FIXED_PORT = True		  # Always attempt to use PORT 8080 if available
-16  TIMEOUT = 100			    # Socket blocking value
+15  FIXED_PORT = True		 # Always attempt to use PORT 8080 if available
+16  TIMEOUT = 100			  # Socket blocking value
 ```
 
 To test the web server you can use any browser or `wget` to request the following pages:
@@ -65,8 +65,8 @@ The program will allow you to choose a `PORT number`, this must be greater than 
 For testing, you may choose to use a random PORT, to do this set the fixed port value to false in `webproxy.py line 15`
 ```
 14  MAX_CONNECTIONS = 4		# Max number of refused connections
-15  FIXED_PORT = True		  # Always attempt to use PORT 8080 if available
-16  TIMEOUT = 100			    # Socket blocking value
+15  FIXED_PORT = True		 # Always attempt to use PORT 8080 if available
+16  TIMEOUT = 100			  # Socket blocking value
 ```
 
 To test the proxy you can use any browser provided you are able to set a manual proxy or the `wget` command. You should see terminal ouput for the related pages that are being requested. Note that this program will only work for `http://` websites, otherwise marked as `Not Secure` on some browsers.
