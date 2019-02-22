@@ -2,7 +2,7 @@
 ***
 
 
-## Ping - Usage
+## Ping
 ```sudo python ping.py```
 
 Ping 10 times (fixed) to host: `google.com`
@@ -15,7 +15,7 @@ Ping 25 times (custom) to host: `google.com`
 ***
 
 
-## Traceroute - Usage
+## Traceroute
 ```sudo python traceroute.py```
 
 Trace route of host: `google.com`
@@ -28,7 +28,7 @@ Trace route of host with a timoute of 2 seconds: `google.com`
 ***
 
 
-## WebServer - Usage
+## WebServer
 ```sudo python webserver.py```
 
 The program will allow you to choose a `PORT number`, this must be greater than 1024. If you decide not to choose a PORT, the program will assume you use `PORT: 8080`. The program will use a different port if the selected port is already in use.
@@ -57,7 +57,7 @@ Literally anything else: `CTRL + C`
 ***
 
 
-## WebProxy - Usage
+## WebProxy
 ```sudo python webproxy.py```
 
 The program will allow you to choose a `PORT number`, this must be greater than 1024. If you decide not to choose a PORT, the program will assume you use `PORT: 8080`. The program will use a different port if the selected port is already in use.
